@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlobalCad — Gestão de Tarefas</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>📋</text></svg>">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow-x: hidden; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #4a4a5a; border-radius: 3px; }
+  select, input, textarea, button { font-family: inherit; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const LOGO_LIGHT = "data:image/png;base64,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";
+const LOGO_DARK = "data:image/png;base64,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";
+
+const DEFAULT_CLIENTS = [
+  { id: "delta", name: "DELTA", color: "#0984E3" },
+  { id: "enep", name: "ENEP", color: "#00B894" },
+  { id: "engedata", name: "ENGEDATA", color: "#E17055" },
+  { id: "florecer", name: "FLORECER", color: "#6C5CE7" },
+  { id: "jm_construcoes", name: "JM CONSTRUÇÕES", color: "#D63031" },
+  { id: "quatro_construcoes", name: "QUATRO CONSTRUÇÕES", color: "#FDCB6E" },
+];
+const PRIORITIES = [
+  { id: "baixa", name: "Baixa", color: "#74B9FF", icon: "↓" },
+  { id: "media", name: "Média", color: "#FFEAA7", icon: "—" },
+  { id: "importante", name: "Importante", color: "#FAB1A0", icon: "↑" },
+  { id: "urgente", name: "Urgente", color: "#FF7675", icon: "⚡" },
+];
+const COLUMNS = [
+  { id: "pendente", name: "Pendentes", icon: "○", accent: "#636E72" },
+  { id: "andamento", name: "Em Andamento", icon: "◐", accent: "#0984E3" },
+  { id: "conferencia", name: "Conferência", icon: "◑", accent: "#FDCB6E" },
+  { id: "concluido", name: "Concluídas", icon: "●", accent: "#00B894" },
+];
+const TASK_TYPES = [
+  { id: "reuniao", name: "Reunião Implantação", icon: "🤝" },
+  { id: "execucao", name: "Execução Implantação", icon: "⚙️" },
+  { id: "liberacao", name: "Liberação para Operação", icon: "🚀" },
+];
+const DEFAULT_MEMBERS = [
+  { id: "bruno", name: "Bruno Neves", initials: "BN", color: "#0984E3" },
+  { id: "leandro", name: "Leandro Vettori", initials: "LV", color: "#00B894" },
+  { id: "gabriel", name: "Gabriel Nazareth", initials: "GN", color: "#E17055" },
+];
+const uuid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+const PCOLORS = ["#6C5CE7","#00B894","#E17055","#D63031","#0984E3","#FDCB6E","#00CEC9","#A29BFE","#E84393","#FF9800"];
+const SAMPLE = [
+  { id: uuid(), title: "Reunião Implantação — DELTA", column: "pendente", client: "delta", priority: "media", assignee: "bruno", requester: "bruno", taskType: "reuniao", description: "", created: "2026-04-01", attachments: [] },
+  { id: uuid(), title: "Execução Implantação — ENEP", column: "andamento", client: "enep", priority: "importante", assignee: "leandro", requester: "leandro", taskType: "execucao", description: "", created: "2026-04-02", attachments: [] },
+  { id: uuid(), title: "Liberação para Operação — ENGEDATA", column: "conferencia", client: "engedata", priority: "urgente", assignee: "gabriel", requester: "gabriel", taskType: "liberacao", description: "", created: "2026-04-03", attachments: [] },
+];
+
+async function sLoad(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } }
+async function sSave(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+const DEFAULT_SLA = { baixa: 30, media: 10, importante: 5, urgente: 2 };
+
+function calcDeadline(created, priority, sla) {
+  if (!created) return "";
+  const d = new Date(created + "T00:00:00");
+  d.setDate(d.getDate() + (sla[priority] || 10));
+  return d.toISOString().slice(0, 10);
+}
+
+function getSlaInfo(task, sla) {
+  if (task.column === "concluido") return { status: "done", label: "Concluída", color: "#00B894", days: 0 };
+  const dl = task.deadline || calcDeadline(task.created, task.priority, sla);
+  if (!dl) return { status: "none", label: "", color: "#6B7280", days: 0 };
+  const now = new Date(); now.setHours(0,0,0,0);
+  const end = new Date(dl + "T00:00:00");
+  const diff = Math.ceil((end - now) / 86400000);
+  if (diff < 0) return { status: "late", label: `Atrasada ${Math.abs(diff)}d`, color: "#FF4757", days: diff };
+  if (diff === 0) return { status: "today", label: "Vence hoje", color: "#FFA502", days: 0 };
+  if (diff <= 2) return { status: "soon", label: `Vence em ${diff}d`, color: "#FFA502", days: diff };
+  return { status: "ok", label: `${diff}d restantes`, color: "#00B894", days: diff };
+}
+
+function SlaTag({ task, sla, small }) {
+  const info = getSlaInfo(task, sla);
+  if (info.status === "none") return null;
+  const sz = small ? 9 : 10;
+  const ico = info.status === "late" ? "🔴" : info.status === "today" || info.status === "soon" ? "🟡" : info.status === "done" ? "✅" : "🟢";
+  return <span title={info.label} style={{ fontSize: sz, color: info.color, fontWeight: 700, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 2 }}>{ico} {!small && info.label}</span>;
+}
+
+const TH = {
+  dark: { bg:"#0F1117", card:"#1A1D27", colBg:"#14161E", colH:"#1C1F2A", text:"#E8E9ED", mut:"#6B7280", brd:"#2A2D3A", inp:"#14161E" },
+  light: { bg:"#F3F4F6", card:"#FFF", colBg:"#F9FAFB", colH:"#EEF0F2", text:"#111827", mut:"#9CA3AF", brd:"#E5E7EB", inp:"#F3F4F6" },
+};
+
+function Av({ m, mbs, sz = 28 }) {
+  const x = mbs.find(a => a.id === m); if (!x) return null;
+  return <div title={x.name} style={{ width:sz,height:sz,borderRadius:"50%",background:x.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:sz*0.4,fontWeight:700,flexShrink:0 }}>{x.initials}</div>;
+}
+function Bg({ c, cls }) {
+  const x = cls.find(a => a.id === c); if (!x) return null;
+  return <span style={{ background:x.color+"22",color:x.color,fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,letterSpacing:"0.04em",textTransform:"uppercase",border:"1px solid "+x.color+"33",whiteSpace:"nowrap" }}>{x.name}</span>;
+}
+function Pd({ pid }) {
+  const p = PRIORITIES.find(x => x.id === pid); if (!p) return null;
+  return <span title={p.name} style={{ fontSize:13,color:p.color,filter:"saturate(1.5)" }}>{p.icon}</span>;
+}
+
+function Card({ task, onEdit, cls, mbs, t, sla }) {
+  const p = PRIORITIES.find(x => x.id === task.priority);
+  const si = getSlaInfo(task, sla);
+  const borderColor = si.status === "late" ? "#FF4757" : (p?.color || "#ddd");
+  return (
+    <div draggable onDragStart={e => e.dataTransfer.setData("tid", task.id)} onClick={() => onEdit(task)}
+      style={{ background:t.card,borderRadius:8,padding:"12px 14px",cursor:"grab",borderLeft:"3px solid "+borderColor,boxShadow: si.status==="late" ? "0 0 0 1px #FF475733, 0 1px 3px rgba(0,0,0,0.06)" : "0 1px 3px rgba(0,0,0,0.06)",transition:"all .15s",display:"flex",flexDirection:"column",gap:8 }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow="0 4px 12px rgba(0,0,0,0.12)"; e.currentTarget.style.transform="translateY(-1px)"; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow= si.status==="late" ? "0 0 0 1px #FF475733, 0 1px 3px rgba(0,0,0,0.06)" : "0 1px 3px rgba(0,0,0,0.06)"; e.currentTarget.style.transform="none"; }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",gap:6 }}><Bg c={task.client} cls={cls}/><Pd pid={task.priority}/></div>
+      {task.taskType && <div style={{ fontSize:10,color:t.mut,fontWeight:600 }}>{TASK_TYPES.find(x=>x.id===task.taskType)?.icon} {TASK_TYPES.find(x=>x.id===task.taskType)?.name}</div>}
+      <div style={{ fontSize:13,fontWeight:600,color:t.text,lineHeight:1.35 }}>{task.title}</div>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+        <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+          <span style={{ fontSize:10,color:t.mut,fontFamily:"monospace" }}>{task.created}</span>
+          {task.attachments?.length > 0 && <span style={{ fontSize:10,color:t.mut }}>📎{task.attachments.length}</span>}
+          <SlaTag task={task} sla={sla} small/>
+        </div>
+        <Av m={task.assignee} mbs={mbs} sz={22}/>
+      </div>
+    </div>
+  );
+}
+
+function Col({ col, tasks, onEdit, onDrop, cls, mbs, t, sla }) {
+  const [ov, setOv] = useState(false);
+  return (
+    <div onDragOver={e=>{e.preventDefault();setOv(true);}} onDragLeave={()=>setOv(false)}
+      onDrop={e=>{e.preventDefault();setOv(false);onDrop(e.dataTransfer.getData("tid"),col.id);}}
+      style={{ flex:"1 1 260px",minWidth:260,maxWidth:340,display:"flex",flexDirection:"column",background:ov?t.colH:t.colBg,borderRadius:12,transition:"background .2s" }}>
+      <div style={{ padding:"14px 14px 10px",display:"flex",alignItems:"center",gap:8,borderBottom:"2px solid "+col.accent+"44" }}>
+        <span style={{ fontSize:14,color:col.accent }}>{col.icon}</span>
+        <span style={{ fontWeight:800,fontSize:12,color:t.text,letterSpacing:"0.03em",textTransform:"uppercase" }}>{col.name}</span>
+        <span style={{ marginLeft:"auto",background:col.accent+"22",color:col.accent,fontSize:11,fontWeight:800,padding:"2px 8px",borderRadius:10 }}>{tasks.length}</span>
+      </div>
+      <div style={{ padding:8,display:"flex",flexDirection:"column",gap:8,flex:1,overflowY:"auto" }}>
+        {tasks.map(tk=><Card key={tk.id} task={tk} onEdit={onEdit} cls={cls} mbs={mbs} t={t} sla={sla}/>)}
+      </div>
+    </div>
+  );
+}
+
+function Mdl({ task, onSave, onDel, onClose, cls, mbs, t, onNC, sla }) {
+  const [f, sF] = useState({ attachments:[], ...task, deadline: task.deadline || calcDeadline(task.created, task.priority, sla) });
+  const [snc, setSnc] = useState(false);
+  const [nc, setNc] = useState({ name:"", color:PCOLORS[Math.floor(Math.random()*PCOLORS.length)] });
+  const fr = useRef(null);
+  const set = (k,v) => {
+    sF(p => {
+      const nf = {...p,[k]:v};
+      if ((k === "priority" || k === "created") && nf.created) {
+        nf.deadline = calcDeadline(nf.created, nf.priority, sla);
+      }
+      return nf;
+    });
+  };
+
+  const hF = e => { Array.from(e.target.files).forEach(file => { const r=new FileReader(); r.onload=()=>sF(p=>({...p,attachments:[...(p.attachments||[]),{name:file.name,size:file.size,type:file.type,data:r.result}]})); r.readAsDataURL(file); }); e.target.value=""; };
+  const rmA = i => sF(p=>({...p,attachments:p.attachments.filter((_,idx)=>idx!==i)}));
+  const fS = b => b<1024?b+" B":b<1048576?(b/1024).toFixed(1)+" KB":(b/1048576).toFixed(1)+" MB";
+  const addC = () => { if(!nc.name.trim())return; const c={id:nc.name.toLowerCase().replace(/\s+/g,"_"),name:nc.name.trim(),color:nc.color}; onNC(c); set("client",c.id); setSnc(false); };
+
+  const iS = { padding:"10px 12px",borderRadius:8,border:"1px solid "+t.brd,background:t.inp,color:t.text,fontSize:13,outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box" };
+  const bS = { padding:"8px 18px",borderRadius:8,border:"none",fontSize:13,cursor:"pointer",fontFamily:"inherit" };
+
+  return (
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(4px)",padding:16 }}>
+      <div style={{ background:t.card,borderRadius:16,padding:24,width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 48px rgba(0,0,0,0.2)" }}>
+        <h3 style={{ margin:"0 0 18px",fontSize:16,fontWeight:800,color:t.text }}>{task.id?"Editar Tarefa":"Nova Tarefa"}</h3>
+        <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
+          <input value={f.title} onChange={e=>set("title",e.target.value)} placeholder="Título da tarefa" style={iS}/>
+          <div><label style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4,display:"block" }}>Descrição</label>
+            <textarea value={f.description||""} onChange={e=>set("description",e.target.value)} placeholder="Descreva a tarefa, o problema ou a solicitação..." rows={3} style={{...iS,resize:"vertical",minHeight:60}}/></div>
+          <div>
+            <label style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4,display:"block" }}>Cliente</label>
+            <div style={{ display:"flex",gap:8 }}>
+              <select value={f.client} onChange={e=>set("client",e.target.value)} style={{...iS,flex:1}}>{cls.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
+              <button onClick={()=>setSnc(!snc)} style={{...bS,background:t.colBg,color:t.mut,fontSize:18,padding:"6px 12px",border:"1px solid "+t.brd}} title="Novo cliente">+</button>
+            </div>
+            {snc && <div style={{ marginTop:8,padding:12,background:t.colBg,borderRadius:8,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap" }}>
+              <input value={nc.name} onChange={e=>setNc(p=>({...p,name:e.target.value}))} placeholder="Nome do cliente" style={{...iS,flex:"1 1 120px"}}/>
+              <input type="color" value={nc.color} onChange={e=>setNc(p=>({...p,color:e.target.value}))} style={{ width:36,height:36,borderRadius:8,border:"none",cursor:"pointer",padding:0 }}/>
+              <button onClick={addC} style={{...bS,background:"#0984E3",color:"#fff",fontWeight:700}}>Adicionar</button>
+            </div>}
+          </div>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
+            <div><label style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4,display:"block" }}>Prioridade</label>
+              <select value={f.priority} onChange={e=>set("priority",e.target.value)} style={iS}>{PRIORITIES.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+            <div><label style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4,display:"block" }}>Solicitante</label>
+              <select value={f.requester||""} onChange={e=>set("requester",e.target.value)} style={iS}><option value="">Selecione...</option>{mbs.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
+          </div>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
+            <div><label style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4,display:"block" }}>Responsável</label>
+              <select value={f.assignee} onChange={e=>set("assignee",e.target.value)} style={iS}>{mbs.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
+            <div><label style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4,display:"block" }}>Data de Criação</label>
+              <input type="date" value={f.created||""} onChange={e=>set("created",e.target.value)} style={iS}/></div>
+          </div>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
+            <div><label style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4,display:"block" }}>Status</label>
+              <select value={f.column} onChange={e=>set("column",e.target.value)} style={iS}>{COLUMNS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div><label style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:4,display:"block" }}>Prazo (SLA)</label>
+              <div style={{ display:"flex",gap:6,alignItems:"center" }}>
+                <input type="date" value={f.deadline||""} onChange={e=>sF(p=>({...p,deadline:e.target.value}))} style={{...iS,flex:1}}/>
+              </div>
+              {f.created && f.deadline && <div style={{ marginTop:4 }}><SlaTag task={f} sla={sla}/></div>}
+            </div>
+          </div>
+          <div>
+            <input ref={fr} type="file" multiple onChange={hF} style={{ display:"none" }}/>
+            <button onClick={()=>fr.current?.click()} style={{...bS,background:t.colBg,color:t.mut,fontSize:12,border:"1px dashed "+t.brd,width:"100%",padding:10,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>📎 Anexar arquivo</button>
+            {f.attachments?.length>0 && <div style={{ marginTop:8,display:"flex",flexDirection:"column",gap:4 }}>
+              {f.attachments.map((a,i)=><div key={i} style={{ display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:t.colBg,borderRadius:6,fontSize:12 }}>
+                <span style={{ color:t.mut }}>{a.type?.startsWith("image/")?"🖼":a.type?.includes("pdf")?"📄":"📁"}</span>
+                <span style={{ flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:t.text }}>{a.name}</span>
+                <span style={{ color:t.mut,fontSize:10,flexShrink:0 }}>{fS(a.size)}</span>
+                <button onClick={()=>rmA(i)} style={{ background:"none",border:"none",color:"#FF7675",cursor:"pointer",fontSize:14,padding:0 }}>×</button>
+              </div>)}
+            </div>}
+          </div>
+        </div>
+        <div style={{ display:"flex",gap:10,marginTop:20,justifyContent:"flex-end",flexWrap:"wrap" }}>
+          {task.id && <button onClick={()=>{onDel(task.id);onClose();}} style={{...bS,background:"#FF767533",color:"#D63031"}}>Excluir</button>}
+          <button onClick={onClose} style={{...bS,background:t.colBg,color:t.mut}}>Cancelar</button>
+          <button onClick={()=>{onSave(f);onClose();}} style={{...bS,background:"#0984E3",color:"#fff",fontWeight:700}}>Salvar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Flt({ filters, setF, cls, mbs, t, tasks, sla }) {
+  const s = { padding:"6px 10px",borderRadius:8,border:"1px solid "+t.brd,background:t.inp,color:t.text,fontSize:12,outline:"none",fontFamily:"inherit",minWidth:0,flex:"1 1 100px" };
+  const usedCls = cls.filter(c => tasks.some(tk => tk.client === c.id));
+  const usedPri = PRIORITIES.filter(p => tasks.some(tk => tk.priority === p.id));
+  const usedMbs = mbs.filter(m => tasks.some(tk => tk.assignee === m.id));
+  const toggleCol = id => setF(p => {
+    const cur = p.cols || COLUMNS.map(c=>c.id);
+    return {...p, cols: cur.includes(id) ? cur.filter(x=>x!==id) : [...cur,id]};
+  });
+  const activeCols = filters.cols || COLUMNS.map(c=>c.id);
+  return (
+    <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+      <div style={{ display:"flex",gap:8,flexWrap:"wrap",alignItems:"center" }}>
+        <span style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",whiteSpace:"nowrap" }}>Filtros:</span>
+        <select value={filters.client} onChange={e=>setF(p=>({...p,client:e.target.value}))} style={s}><option value="">Todos clientes</option>{usedCls.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
+        <select value={filters.priority} onChange={e=>setF(p=>({...p,priority:e.target.value}))} style={s}><option value="">Todas prioridades</option>{usedPri.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select>
+        <select value={filters.assignee} onChange={e=>setF(p=>({...p,assignee:e.target.value}))} style={s}><option value="">Todos responsáveis</option>{usedMbs.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select value={filters.sla||""} onChange={e=>setF(p=>({...p,sla:e.target.value}))} style={{...s, flex:"1 1 110px"}}><option value="">SLA: Todos</option><option value="ok">🟢 No prazo</option><option value="soon">🟡 Vence em breve</option><option value="late">🔴 Atrasadas</option></select>
+        <input value={filters.search} onChange={e=>setF(p=>({...p,search:e.target.value}))} placeholder="Buscar..." style={{...s,flex:"1 1 140px"}}/>
+      </div>
+      <div style={{ display:"flex",gap:10,flexWrap:"wrap",alignItems:"center" }}>
+        <span style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em",whiteSpace:"nowrap" }}>Status:</span>
+        {COLUMNS.map(col => {
+          const active = activeCols.includes(col.id);
+          const count = tasks.filter(tk=>tk.column===col.id).length;
+          return (
+            <label key={col.id} onClick={()=>toggleCol(col.id)} style={{ display:"flex",alignItems:"center",gap:5,cursor:"pointer",padding:"4px 10px",borderRadius:6,background:active?col.accent+"22":"transparent",border:"1px solid "+(active?col.accent+"55":t.brd),transition:"all .15s",userSelect:"none" }}>
+              <span style={{ width:14,height:14,borderRadius:3,border:"2px solid "+(active?col.accent:t.mut),background:active?col.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#fff",transition:"all .15s" }}>{active?"✓":""}</span>
+              <span style={{ fontSize:11,fontWeight:600,color:active?col.accent:t.mut }}>{col.icon} {col.name}</span>
+              <span style={{ fontSize:10,color:t.mut }}>({count})</span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [tasks, setTasks] = useState([]);
+  const [cls, setCls] = useState(DEFAULT_CLIENTS);
+  const [mbs] = useState(DEFAULT_MEMBERS);
+  const [sla, setSla] = useState(DEFAULT_SLA);
+  const [loaded, setLoaded] = useState(false);
+  const [mdl, setMdl] = useState(null);
+  const [showSla, setShowSla] = useState(false);
+  const [flt, setFlt] = useState({ client:"",priority:"",assignee:"",search:"",sla:"",cols:COLUMNS.map(c=>c.id) });
+  const [view, setView] = useState("kanban");
+  const [theme, setTheme] = useState("dark");
+  const t = TH[theme];
+
+  useEffect(() => { Promise.all([sLoad("geo-tasks"),sLoad("geo-clients"),sLoad("geo-theme"),sLoad("geo-sla")]).then(([tk,cl,th,sl])=>{
+    setTasks(tk||SAMPLE);
+    if(cl) {
+      const defIds = DEFAULT_CLIENTS.map(c=>c.id);
+      const custom = cl.filter(c=>!defIds.includes(c.id));
+      setCls([...DEFAULT_CLIENTS, ...custom]);
+    }
+    if(th)setTheme(th); if(sl)setSla(sl); setLoaded(true);
+  }); }, []);
+  useEffect(() => { if(loaded) sSave("geo-tasks",tasks); }, [tasks,loaded]);
+  useEffect(() => { if(loaded) sSave("geo-clients",cls); }, [cls,loaded]);
+  useEffect(() => { if(loaded) sSave("geo-theme",theme); }, [theme,loaded]);
+  useEffect(() => { if(loaded) sSave("geo-sla",sla); }, [sla,loaded]);
+
+  const today = () => new Date().toISOString().slice(0,10);
+  const hSave = f => { if(f.id) setTasks(p=>p.map(x=>x.id===f.id?f:x)); else setTasks(p=>[...p,{...f,id:uuid(),created:f.created||today()}]); };
+  const hDrop = (tid,col) => setTasks(p=>p.map(x=>x.id===tid?{...x,column:col}:x));
+  const hDel = id => setTasks(p=>p.filter(x=>x.id!==id));
+
+  const activeCols = flt.cols || COLUMNS.map(c=>c.id);
+  const filtered = tasks.filter(x => {
+    if(!activeCols.includes(x.column)) return false;
+    if(flt.client && x.client!==flt.client) return false;
+    if(flt.priority && x.priority!==flt.priority) return false;
+    if(flt.assignee && x.assignee!==flt.assignee) return false;
+    if(flt.search && !x.title.toLowerCase().includes(flt.search.toLowerCase())) return false;
+    if(flt.sla) {
+      const si = getSlaInfo(x, sla);
+      if(flt.sla==="late" && si.status!=="late") return false;
+      if(flt.sla==="soon" && si.status!=="today" && si.status!=="soon") return false;
+      if(flt.sla==="ok" && si.status!=="ok") return false;
+    }
+    return true;
+  });
+
+  const lateCount = tasks.filter(x => getSlaInfo(x, sla).status === "late").length;
+
+  const nT = () => { const td = today(); setMdl({ title:"",column:"pendente",client:"geral",priority:"media",assignee:"fabio",requester:"",description:"",created:td,deadline:calcDeadline(td,"media",sla),attachments:[] }); };
+  const bS = { padding:"8px 18px",borderRadius:8,border:"none",fontSize:13,cursor:"pointer",fontFamily:"inherit" };
+  const iSla = { padding:"6px 10px",borderRadius:8,border:"1px solid "+t.brd,background:t.inp,color:t.text,fontSize:13,outline:"none",fontFamily:"inherit",width:60,textAlign:"center" };
+
+  return (
+    <div style={{ fontFamily:"'DM Sans','Segoe UI',sans-serif",background:t.bg,minHeight:"100vh",color:t.text }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+      <div style={{ padding:"12px 16px",borderBottom:"1px solid "+t.brd,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap" }}>
+        <img src={LOGO_LIGHT} alt="GlobalCad" style={{ height:36, objectFit:"contain" }}/>
+        <div style={{ fontSize:10,color:t.mut,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.08em",borderLeft:"1px solid "+t.brd,paddingLeft:12 }}>Gestão de Tarefas</div>
+        {lateCount > 0 && <span style={{ background:"#FF475722",color:"#FF4757",fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,cursor:"pointer" }} onClick={()=>setFlt(p=>({...p,sla:"late"}))}>🔴 {lateCount} atrasada{lateCount>1?"s":""}</span>}
+        <div style={{ marginLeft:"auto",display:"flex",gap:6,alignItems:"center",flexWrap:"wrap" }}>
+          <button onClick={()=>setShowSla(!showSla)} style={{...bS,padding:"6px 12px",background:t.colBg,color:t.mut,fontSize:11,fontWeight:700,border:"1px solid "+t.brd}} title="Configurar SLA">⏱ SLA</button>
+          <button onClick={()=>setTheme(theme==="dark"?"light":"dark")} style={{...bS,padding:"6px 12px",background:t.colBg,color:t.mut,fontSize:16}} title="Alternar tema">{theme==="dark"?"☀":"🌙"}</button>
+          {["kanban","table"].map(v=><button key={v} onClick={()=>setView(v)} style={{...bS,padding:"6px 14px",fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",background:view===v?"#0984E3":t.colBg,color:view===v?"#fff":t.mut}}>{v==="kanban"?"⊞ Quadro":"☰ Grade"}</button>)}
+          <button onClick={nT} style={{...bS,padding:"8px 16px",background:"#0984E3",color:"#fff",fontWeight:700,fontSize:12}}>+ Nova Tarefa</button>
+        </div>
+      </div>
+      {showSla && (
+        <div style={{ padding:"12px 16px",borderBottom:"1px solid "+t.brd,background:t.colBg }}>
+          <div style={{ display:"flex",gap:16,alignItems:"center",flexWrap:"wrap" }}>
+            <span style={{ fontSize:11,fontWeight:700,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em" }}>SLA (dias):</span>
+            {PRIORITIES.map(p=>(
+              <div key={p.id} style={{ display:"flex",alignItems:"center",gap:6 }}>
+                <span style={{ fontSize:12,color:p.color,fontWeight:600 }}>{p.icon} {p.name}</span>
+                <input type="number" min={1} value={sla[p.id]||""} onChange={e=>setSla(s=>({...s,[p.id]:parseInt(e.target.value)||0}))} style={iSla}/>
+                <span style={{ fontSize:10,color:t.mut }}>dias</span>
+              </div>
+            ))}
+            <button onClick={()=>setShowSla(false)} style={{...bS,padding:"4px 12px",background:t.card,color:t.mut,fontSize:11}}>Fechar</button>
+          </div>
+        </div>
+      )}
+      <div style={{ padding:"10px 16px" }}><Flt filters={flt} setF={setFlt} cls={cls} mbs={mbs} t={t} tasks={tasks} sla={sla}/></div>
+      {view==="kanban" ? (
+        <div style={{ padding:"0 16px 60px",display:"flex",gap:10,overflowX:"auto" }}>
+          {COLUMNS.filter(col=>activeCols.includes(col.id)).map(col=><Col key={col.id} col={col} tasks={filtered.filter(x=>x.column===col.id)} onEdit={setMdl} onDrop={hDrop} cls={cls} mbs={mbs} t={t} sla={sla}/>)}
+        </div>
+      ) : (
+        <div style={{ padding:"0 16px 60px",overflowX:"auto" }}>
+          <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
+            <thead><tr style={{ borderBottom:"2px solid "+t.brd }}>{["Tarefa","Cliente","Status","Prioridade","Prazo","SLA","Responsável"].map(h=><th key={h} style={{ padding:"10px 12px",textAlign:"left",fontWeight:800,fontSize:11,color:t.mut,textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>)}</tr></thead>
+            <tbody>{filtered.map(tk=>{const col=COLUMNS.find(c=>c.id===tk.column); const dl=tk.deadline||calcDeadline(tk.created,tk.priority,sla); return(
+              <tr key={tk.id} onClick={()=>setMdl(tk)} style={{ borderBottom:"1px solid "+t.brd,cursor:"pointer" }} onMouseEnter={e=>e.currentTarget.style.background=t.colBg} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <td style={{ padding:"10px 12px",fontWeight:600 }}><div style={{display:"flex",alignItems:"center",gap:6}}>{tk.title}{tk.attachments?.length>0 && <span style={{fontSize:11,color:t.mut}} title={tk.attachments.length+" anexo(s)"}>📎</span>}</div></td>
+                <td style={{ padding:"10px 12px",fontSize:11,color:t.mut }}>{TASK_TYPES.find(x=>x.id===tk.taskType)?.icon} {TASK_TYPES.find(x=>x.id===tk.taskType)?.name}</td>
+                <td style={{ padding:"10px 12px" }}><Bg c={tk.client} cls={cls}/></td>
+                <td style={{ padding:"10px 12px" }}><span style={{ color:col?.accent,fontSize:12,fontWeight:600 }}>{col?.icon} {col?.name}</span></td>
+                <td style={{ padding:"10px 12px" }}><Pd pid={tk.priority}/> {PRIORITIES.find(p=>p.id===tk.priority)?.name}</td>
+                <td style={{ padding:"10px 12px",fontFamily:"monospace",fontSize:11,color:t.mut }}>{dl}</td>
+                <td style={{ padding:"10px 12px" }}><SlaTag task={tk} sla={sla}/></td>
+                <td style={{ padding:"10px 12px" }}><Av m={tk.assignee} mbs={mbs} sz={22}/></td>
+              </tr>);})}</tbody>
+          </table>
+        </div>
+      )}
+      <div style={{ position:"fixed",bottom:0,left:0,right:0,background:t.card,borderTop:"1px solid "+t.brd,padding:"8px 16px",display:"flex",gap:16,fontSize:11,color:t.mut,fontWeight:600,flexWrap:"wrap",zIndex:10 }}>
+        {COLUMNS.map(col=><span key={col.id} style={{ color:col.accent }}>{col.icon} {col.name}: {tasks.filter(x=>x.column===col.id).length}</span>)}
+        <span style={{ marginLeft:"auto" }}>Total: {tasks.length}</span>
+      </div>
+      {mdl && <Mdl task={mdl} onSave={hSave} onDel={hDel} onClose={()=>setMdl(null)} cls={cls} mbs={mbs} t={t} onNC={c=>setCls(p=>[...p,c])} sla={sla}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+
+</script>
+</body>
+</html>
